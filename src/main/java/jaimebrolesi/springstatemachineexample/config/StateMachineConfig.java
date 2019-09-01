@@ -12,12 +12,12 @@ import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
+import org.springframework.statemachine.guard.Guard;
 import org.springframework.statemachine.listener.StateMachineListenerAdapter;
 import org.springframework.statemachine.state.State;
 
 import java.util.EnumSet;
 import java.util.Random;
-import java.util.Set;
 
 import static jaimebrolesi.springstatemachineexample.domain.PaymentState.*;
 
@@ -41,6 +41,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
         transitions.withExternal()
                 .source(NEW).target(NEW).event(PaymentEvent.PRE_AUTHORIZE)
                 .action(preAuthAction())
+                .guard(paymentIdRequired())
                 .and()
                 .withExternal().source(NEW).target(PRE_AUTH).event(PaymentEvent.PRE_AUTH_APPROVED)
                 .and()
@@ -64,6 +65,10 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
         };
         config.withConfiguration()
                 .listener(adapter);
+    }
+
+    public Guard<PaymentState, PaymentEvent> paymentIdRequired() {
+        return stateContext -> stateContext.getMessageHeader(PaymentService.PAYMENT_ID_HEADER) != null;
     }
 
     public Action<PaymentState, PaymentEvent> preAuthAction() {
