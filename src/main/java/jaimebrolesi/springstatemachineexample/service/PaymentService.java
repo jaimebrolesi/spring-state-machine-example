@@ -16,9 +16,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PaymentService {
 
-    public static final String PAYMENT_ID_HEADER = "payment_id";
+    static final String PAYMENT_ID_HEADER = "payment_id";
     private final PaymentRepository paymentRepository;
     private final StateMachineFactory<PaymentState, PaymentEvent> smFactory;
+    private final PaymentStateChangeInterceptor paymentStateChangeInterceptor;
 
     Payment newPayment(Payment payment) {
         payment.setState(PaymentState.NEW);
@@ -60,9 +61,11 @@ public class PaymentService {
         stateMachine.stop();
         //Reset the state of payment state machine
         stateMachine.getStateMachineAccessor()
-                .doWithAllRegions(sma ->
+                .doWithAllRegions(sma -> {
+                        sma.addStateMachineInterceptor(paymentStateChangeInterceptor);
                         sma.resetStateMachine(new DefaultStateMachineContext<>(
-                                payment.getState(), null, null, null)));
+                                payment.getState(), null, null, null));
+                });
         //Start state machine process
         stateMachine.start();
         return stateMachine;
