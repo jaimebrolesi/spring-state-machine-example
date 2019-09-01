@@ -14,8 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest
 class PaymentServiceTest {
 
@@ -51,7 +49,7 @@ class PaymentServiceTest {
             final StateMachine<PaymentState, PaymentEvent> authorizeSM = paymentService.authorizePayment(savedPayment.getId());
             System.out.println("Authorization result: " + authorizeSM.getState().getId());
         } else {
-            System.out.println("Payment failed on pre authorization.");
+            System.out.println("Payment failed on pre authorization. State: " + preAuthSM.getState().getId());
         }
     }
 }
